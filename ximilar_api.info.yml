@@ -1,0 +1,5 @@
+name: 'Ximilar API'
+type: module
+description: 'Provides Ximilar API integration.'
+package: media
+core_version_requirement: ^10

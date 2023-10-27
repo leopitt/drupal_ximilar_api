@@ -1,0 +1,7 @@
+ximilar_api.settings:
+  path: '/admin/config/media/ximilar-api'
+  defaults:
+    _title: 'Ximilar API Settings'
+    _form: 'Drupal\ximilar_api\Form\SettingsForm'
+  requirements:
+    _permission: 'administer ximilar api'

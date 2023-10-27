@@ -1,0 +1,4 @@
+services:
+  ximilar_api.service:
+    class: Drupal\ximilar_api\XimilarAPIService
+    arguments: ['@http_client', '@config.factory', '@file_url_generator', '@logger.channel.default']

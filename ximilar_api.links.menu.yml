@@ -1,0 +1,6 @@
+ximilar_api.settings:
+  title: Ximilar API Settings
+  description: Configuration for the Ximilar API
+  parent: system.admin_config_media
+  route_name: ximilar_api.settings
+  weight: 10
