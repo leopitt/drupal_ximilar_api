@@ -58,7 +58,7 @@ final class SettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Similarity Threshold'),
       '#default_value' => $this->config('ximilar_api.settings')->get('similarity_threshold'),
-      '#description' => $this->t('How similar (0 = identical, 1 = most different) and image must be to be considered a duplicate.'),
+      '#description' => $this->t('How similar (0 = identical, 1 = most different) an image must be to be considered a duplicate.'),
     ];
     return parent::buildForm($form, $form_state);
   }
