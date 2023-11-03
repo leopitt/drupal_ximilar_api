@@ -152,6 +152,43 @@ final class XimilarAPIService {
   }
 
   /**
+   * Delete image(s) to a collection.
+   *
+   * See https://docs.ximilar.com/services/similarity_search/#v2delete.
+   *
+   * @param FileInterface[] $image_files
+   *   An array of media entity objects.
+   */
+  public function delete(array $image_files): void {
+    if ($this->verboseLogging) {
+      $this->logger->info('Deleting an image');
+    }
+
+    // Prepare the JSON for the request.
+    $json_records = $this->convertImagesToArray($image_files, FALSE);
+
+    try {
+      $endpoint = $this->apiBaseUrl . 'delete';
+      $request = [
+        'headers' => $this->getHttpRequestHeaders(),
+        'json' => [
+          'records' => $json_records,
+        ],
+      ];
+      $response = $this->httpClient->post($endpoint, $request);
+
+      if ($this->verboseLogging) {
+        $this->logger->info($endpoint);
+        $this->logger->info(print_r($request, TRUE));
+        $this->logger->info(print_r($response->getBody()->getContents(), TRUE));
+      }
+    } catch (GuzzleException $e) {
+      $response = $e->getResponse();
+      $this->logger->error(print_r($response, TRUE));
+    }
+  }
+
+  /**
    * Search for near duplicate images in the collection.
    *
    * @param FileInterface $image_file
@@ -196,14 +233,14 @@ final class XimilarAPIService {
         $distance = $data->answer_distances[$i];
 
         if ($distance < $this->similarityThreshold) {
-          $file = File::load($id);
-          $url_string = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
-          $url = URL::fromUri($url_string);
-          //\Drupal::messenger()->addMessage(Link::fromTextAndUrl('File ID ' . $id . ' has a distance of ' . $distance, $url));
-          $near_duplicates[] = [
-            'id' => $id,
-            'distance' => $distance,
-          ];
+          if ($file = File::load($id)) {
+            $url_string = $this->fileUrlGenerator->generateAbsoluteString($file->getFileUri());
+            $url = URL::fromUri($url_string);
+            $near_duplicates[] = [
+              'id' => $id,
+              'distance' => $distance,
+            ];
+          }
         }
       }
 
@@ -227,12 +264,14 @@ final class XimilarAPIService {
    * Convert an array of images to records.
    *
    * @param FileInterface[] $image_files
-   *    An array of media entity objects.
+   *   An array of media entity objects.
+   * @param bool $include_data
+   *   Whether to include data in the records.
    *
    * @returns array
    *   An array of records.
    */
-  protected function convertImagesToArray(array $image_files): array {
+  protected function convertImagesToArray(array $image_files, $include_data = TRUE): array {
     $json_records = [];
 
     foreach ($image_files as $image_file) {
@@ -242,7 +281,10 @@ final class XimilarAPIService {
           '_id' => $image_file->id(),
         ];
 
-        $record = array_merge($record, $this->getImageData($image_file));
+        if ($include_data) {
+          // Get the file data.
+          $record = array_merge($record, $this->getImageData($image_file));
+        }
 
         // Get the file url.
         $json_records[] = $record;

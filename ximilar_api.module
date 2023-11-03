@@ -8,51 +8,9 @@ use Drupal\Core\Link;
 /**
  * Implements hook_ENTITY_insert().
  */
-function ximilar_api_file_insert(File $file) {
+function ximilar_api_file_delete(File $file) {
   // Load the ximilar_api service.
   /** @var \Drupal\ximilar_api\XimilarAPIService $ximilar_api */
   $ximilar_api = \Drupal::service('ximilar_api.service');
-  $ximilar_api->insert([$file]);
-  return FALSE;
-}
-
-
-/**
- * Checks that the file has no near duplicates in the collection.
- *
- * @param \Drupal\file\FileInterface $file
- *   A file entity.
- *
- * @return array
- *   An empty array if the file is a valid image or an array containing an error
- *   message if it's not.
- *
- * @see hook_file_validate()
- */
-function ximilar_api_validate_check_near_duplicates(FileInterface $file) {
-  $errors = [];
-
-  if ($file->isNew()) {
-    // Load the ximilar_api service.
-    /** @var \Drupal\ximilar_api\XimilarAPIService $ximilar_api */
-    $ximilar_api = \Drupal::service('ximilar_api.service');
-    $file_url_generator = \Drupal::service('file_url_generator');
-    // See if we have near duplicates.
-    if ($near_duplicates = $ximilar_api->nearDuplicates($file)) {
-      $errors[] = t('The chosen file has near duplicate images in the collection already. Consider using one of them instead.');
-
-      foreach($near_duplicates as $near_duplicate) {
-        $file = File::load($near_duplicate['id']);
-        $url_string = $file_url_generator->generateAbsoluteString($file->getFileUri());
-        $url = URL::fromUri($url_string);
-        $text = t('@filename (@similarity% match)', [
-          '@filename' => $file->getFilename(),
-          '@similarity' => round((1 - $near_duplicate['distance']) * 100),
-        ]);
-        $errors[] = Link::fromTextAndUrl($text, $url)->toString();
-      }
-    }
-  }
-
-  return $errors;
+  $ximilar_api->delete([$file]);
 }
