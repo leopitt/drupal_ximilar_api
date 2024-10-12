@@ -1,4 +1,9 @@
 services:
+  logger.channel.ximilar_api:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: ['@logger.factory', 'get']
+    arguments: ['ximilar_api']
+
   ximilar_api.service:
     class: Drupal\ximilar_api\XimilarAPIService
-    arguments: ['@http_client', '@config.factory', '@file_url_generator', '@logger.channel.default']
+    arguments: ['@http_client', '@config.factory', '@file_url_generator', '@logger.channel.ximilar_api']

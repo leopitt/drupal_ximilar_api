@@ -5,3 +5,11 @@ ximilar_api.settings:
     _form: 'Drupal\ximilar_api\Form\SettingsForm'
   requirements:
     _permission: 'administer ximilar api'
+
+ximilar_api.media_sync:
+  path: '/admin/config/media/ximilar-api/media-sync'
+  defaults:
+    _title: 'Media Sync'
+    _form: 'Drupal\ximilar_api\Form\MediaSyncForm'
+  requirements:
+    _permission: 'administer ximilar api'

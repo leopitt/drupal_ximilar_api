@@ -6,7 +6,7 @@ use Drupal\file\FileInterface;
 use Drupal\Core\Link;
 
 /**
- * Implements hook_ENTITY_insert().
+ * Implements hook_ENTITY_delete().
  */
 function ximilar_api_file_delete(File $file) {
   // Load the ximilar_api service.

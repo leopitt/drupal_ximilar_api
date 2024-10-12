@@ -4,3 +4,8 @@ ximilar_api.settings:
   parent: system.admin_config_media
   route_name: ximilar_api.settings
   weight: 10
+
+ximilar_api.media_sync:
+  title: Media Sync
+  route_name: ximilar_api.media_sync
+  weight: 10
