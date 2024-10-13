@@ -1,11 +1,19 @@
 ximilar_api.settings:
-  title: Ximilar API Settings
+  title: Ximilar API
   description: Configuration for the Ximilar API
   parent: system.admin_config_media
   route_name: ximilar_api.settings
   weight: 10
 
+ximilar_api.dashboard:
+  title: Settings
+  parent: 'ximilar_api.settings'
+  route_name: ximilar_api.settings
+  weight: 1
+
 ximilar_api.media_sync:
-  title: Media Sync
+  title: Sync Media Library
+  description: Push the contents of your Media Library to Ximilar
+  parent: 'ximilar_api.settings'
   route_name: ximilar_api.media_sync
-  weight: 10
+  weight: 2

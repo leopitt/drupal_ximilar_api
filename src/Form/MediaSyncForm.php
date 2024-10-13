@@ -71,32 +71,49 @@ final class MediaSyncForm extends FormBase {
    *   The batch context.
    */
   public static function processMediaImages(array &$context) {
-    // Get media entities of type 'image'.
+    // Get the Ximilar API service.
+    /** @var \Drupal\ximilar_api\XimilarAPIService $ximilar_api */
+    $ximilar_api = \Drupal::service('ximilar_api.service');
+
+    // Get all media entities of type 'image'.
     if (!isset($context['sandbox']['media_ids'])) {
       $query = \Drupal::entityQuery('media')
         ->accessCheck(FALSE)
         ->condition('bundle', 'image')
         ->execute();
 
+      // Store the media IDs in the batch context.
       $context['sandbox']['media_ids'] = $query;
+      // Set the total count of media entities.
       $context['sandbox']['total'] = count($context['sandbox']['media_ids']);
+      // Set the current media entity index.
       $context['sandbox']['current'] = 0;
     }
 
-    $media_ids = array_slice($context['sandbox']['media_ids'], $context['sandbox']['current'], 10);
+    // Process the next 10 entities to be processed.
+    $media_ids = array_slice($context['sandbox']['media_ids'], $context['sandbox']['current'], 1);
+
+    // Loop over the media.
     foreach ($media_ids as $media_id) {
+      // Load the media entity.
       $media = Media::load($media_id);
+
       if ($media) {
         // Get the associated file entity.
         $file_id = $media->get('field_media_image')->target_id;
+        // Load the file entity.
         $file = File::load($file_id);
 
         if ($file) {
+          // Get the file name.
           $file_name = $file->getFilename();
+          // Outout a debug message.
           $context['message'] = t('Processing file: @fid - @filename', ['@fid' => $file_id, '@filename' => $file_name]);
-
           // Display the message on screen.
           \Drupal::messenger()->addMessage(t('File ID: @fid, File name: @filename', ['@fid' => $file_id, '@filename' => $file_name]));
+
+          // Insert the image to the Ximilar collection.
+          $ximilar_api->insert([$file]);
         }
       }
 

@@ -1,5 +1,5 @@
 ximilar_api.settings:
-  path: '/admin/config/media/ximilar-api'
+  path: '/admin/config/media/ximilar-api/settings'
   defaults:
     _title: 'Ximilar API Settings'
     _form: 'Drupal\ximilar_api\Form\SettingsForm'

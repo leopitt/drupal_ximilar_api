@@ -52,7 +52,7 @@ final class SettingsForm extends ConfigFormBase {
         'base64' => $this->t('Pass the image encoded as base64'),
       ],
       '#default_value' => $this->config('ximilar_api.settings')->get('image_data_type'),
-      '#description' => $this->t('How image data should be passed to the API.'),
+      '#description' => $this->t('How image data should be passed to the API. URL is much faster but requires that your images are publically accessible.'),
     ];
     $form['similarity_threshold'] = [
       '#type' => 'textfield',

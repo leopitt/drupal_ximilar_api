@@ -5,5 +5,5 @@ services:
     arguments: ['ximilar_api']
 
   ximilar_api.service:
-    class: Drupal\ximilar_api\XimilarAPIService
+    class: Drupal\ximilar_api\Service\XimilarAPIService
     arguments: ['@http_client', '@config.factory', '@file_url_generator', '@logger.channel.ximilar_api']

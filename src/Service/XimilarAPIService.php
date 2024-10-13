@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
 
-namespace Drupal\ximilar_api;
+namespace Drupal\ximilar_api\Service;
 
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -77,7 +77,7 @@ final class XimilarAPIService {
   protected bool $verboseLogging = FALSE;
 
   /**
-   * Image data type to use.
+   * Image data type to use. 'base64' or 'url'.
    *
    * @var string
    */
@@ -92,6 +92,11 @@ final class XimilarAPIService {
 
   /**
    * Constructs a XimilarAPIService object.
+   *
+   * @param \Psr\Http\Client\ClientInterface $httpClient
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   * @param \Drupal\Core\File\FileUrlGeneratorInterface $file_url_generator
+   * @param \Psr\Log\LoggerInterface $logger
    */
   public function __construct(
     ClientInterface $httpClient,
@@ -106,9 +111,65 @@ final class XimilarAPIService {
     // Fetch the authentication token and collection id from config.
     $this->authenticationToken = $this->configFactory->get('ximilar_api.settings')->get('authentication_token');
     $this->collectionId = $this->configFactory->get('ximilar_api.settings')->get('collection_id');
+    // Get our logging settings - verbose or normal.
     $this->verboseLogging = $this->configFactory->get('ximilar_api.settings')->get('verbose_logging');
+    // Get the image data type to use with Ximilar (base64 or url).
     $this->imageDataType = $this->configFactory->get('ximilar_api.settings')->get('image_data_type');
+    // Get the similarity threshold.
     $this->similarityThreshold = $this->configFactory->get('ximilar_api.settings')->get('similarity_threshold');
+  }
+
+  /**
+   * Get request headers that are needed in all Ximilar requests.
+   *
+   * @returns array
+   *   An array of header information for the http request.
+   */
+  private function getHttpRequestHeaders(): array {
+    return [
+      'Content-Type' => 'application/json;charset=UTF-8',
+      'collection-id' => $this->collectionId,
+      'Authorization' => 'Token ' . $this->authenticationToken,
+    ];
+  }
+
+  /**
+   * Generic function to make requests to the Ximilar API.
+   *
+   * @param string $endpoint_path
+   *   The endpoint path to make the request to.
+   * @param array $data
+   *   The data to send.
+   *
+   * @returns mixed
+   */
+  private function makeRequest(string $endpoint_path, array $data): mixed {
+    // Construct the full endpoint URL.
+    $endpoint = $this->apiBaseUrl . $endpoint_path;
+
+    // Try and make the request.
+    try {
+      $request = [
+        'headers' => $this->getHttpRequestHeaders(),
+        'json' => $data,
+      ];
+      // Get the response.
+      $response = $this->httpClient->post($endpoint, $request);
+
+      // If verbose logging is on, log the endpoint, request and response.
+      if ($this->verboseLogging) {
+        $this->logger->info($endpoint);
+        $this->logger->info(print_r($request, TRUE));
+        $this->logger->info(print_r($response->getBody()->getContents(), TRUE));
+      }
+    } catch (GuzzleException $e) {
+      // Log the error if there was one.
+      $response = $e->getResponse();
+      $this->logger->error(print_r($response, TRUE));
+    }
+
+    // Return the response.
+    return $response;
   }
 
   /**
@@ -127,28 +188,16 @@ final class XimilarAPIService {
     // Prepare the JSON for the request.
     $json_records = $this->convertImagesToArray($image_files);
 
-    try {
-      $endpoint = $this->apiBaseUrl . 'insert';
-      $request = [
-        'headers' => $this->getHttpRequestHeaders(),
-        'json' => [
-          'fields_to_return' => [
-            '_id',
-          ],
-          'records' => $json_records,
-        ],
-      ];
-      $response = $this->httpClient->post($endpoint, $request);
+    // Prepare the requeest data.
+    $request_data = [
+      'fields_to_return' => [
+        '_id',
+      ],
+      'records' => $json_records,
+    ];
 
-      if ($this->verboseLogging) {
-        $this->logger->info($endpoint);
-        $this->logger->info(print_r($request, TRUE));
-        $this->logger->info(print_r($response->getBody()->getContents(), TRUE));
-      }
-    } catch (GuzzleException $e) {
-      $response = $e->getResponse();
-      $this->logger->error(print_r($response, TRUE));
-    }
+    // Make the request.
+    $this->makeRequest('insert', $request_data);
   }
 
   /**
@@ -302,19 +351,18 @@ final class XimilarAPIService {
    * Get image data.
    *
    * @param FileInterface $image_file
-   *     A media entity objects.
+   *   A media entity object.
    *
    * @returns array
-   *    An array with one key, either _url or _base64, depending upon the data type.
+   *   An array of image data.
    */
-  private function getImageData($image_file): array {
+  public function getImageData($image_file): array {
     $record = [];
 
     switch ($this->imageDataType) {
       case 'base64':
         $data = file_get_contents($image_file->getFileUri());
-        $base64 = base64_encode($data);
-        $record['_base64'] = $base64;
+        $record['_base64'] = base64_encode($data);
         break;
 
       default:
@@ -322,25 +370,7 @@ final class XimilarAPIService {
         break;
     }
 
-    if ($this->verboseLogging) {
-      $this->logger->info(print_r($record, TRUE));
-    }
-
     return $record;
-  }
-
-  /**
-   * Get request headers.
-   *
-   * @returns array
-   *   An array of header information for the http request.
-   */
-  private function getHttpRequestHeaders(): array {
-    return [
-      'Content-Type' => 'application/json;charset=UTF-8',
-      'collection-id' => $this->collectionId,
-      'Authorization' => 'Token ' . $this->authenticationToken,
-    ];
   }
 
 }
