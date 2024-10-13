@@ -75,28 +75,35 @@ final class MediaSyncForm extends FormBase {
     /** @var \Drupal\ximilar_api\XimilarAPIService $ximilar_api */
     $ximilar_api = \Drupal::service('ximilar_api.service');
 
-    // Get all media entities of type 'image'.
-    if (!isset($context['sandbox']['media_ids'])) {
-      $query = \Drupal::entityQuery('media')
+    // If we haven't already got a total, then we need to initialise
+    // the loop.
+    if (!isset($context['sandbox']['items_total'])) {
+      // Start from 0.
+      $context['sandbox']['current_media_id'] = 0;
+      // Items processed.
+      $context['sandbox']['items_processed'] = 0;
+      // Get the total number of media entities.
+      $context['sandbox']['items_total'] = count(\Drupal::entityQuery('media')
         ->accessCheck(FALSE)
         ->condition('bundle', 'image')
-        ->execute();
-
-      // Store the media IDs in the batch context.
-      $context['sandbox']['media_ids'] = $query;
-      // Set the total count of media entities.
-      $context['sandbox']['total'] = count($context['sandbox']['media_ids']);
-      // Set the current media entity index.
-      $context['sandbox']['current'] = 0;
+        ->execute());
     }
 
-    // Process the next 10 entities to be processed.
-    $media_ids = array_slice($context['sandbox']['media_ids'], $context['sandbox']['current'], 1);
+    $media_ids = \Drupal::entityQuery('media')
+      ->accessCheck(FALSE)
+      ->condition('bundle', 'image')
+      ->condition('mid', $context['sandbox']['current_media_id'], '>')
+      // Order by media ID.
+      ->sort('mid', 'ASC')
+      ->range(0, 1)
+      ->execute();
 
     // Loop over the media.
     foreach ($media_ids as $media_id) {
       // Load the media entity.
       $media = Media::load($media_id);
+      // Update the current media ID.
+      $context['sandbox']['current_media_id'] = $media_id;
 
       if ($media) {
         // Get the associated file entity.
@@ -107,18 +114,21 @@ final class MediaSyncForm extends FormBase {
         if ($file) {
           // Get the file name.
           $file_name = $file->getFilename();
-          // Outout a debug message.
-          $context['message'] = t('Processing file: @fid - @filename', ['@fid' => $file_id, '@filename' => $file_name]);
-          // Display the message on screen.
-          \Drupal::messenger()->addMessage(t('File ID: @fid, File name: @filename', ['@fid' => $file_id, '@filename' => $file_name]));
-
+          // Output a debug message.
+          $context['message'] = t('Processing file: fid: @fid, filename: @filename', ['@fid' => $file_id, '@filename' => $file_name]);
           // Insert the image to the Ximilar collection.
           $ximilar_api->insert([$file]);
+          // Add a results message.
+          $context['results']['messages'][] = t('Synced file <em>@filename</em> (@fid)', ['@fid' => $file_id, '@filename' => $file_name]);
         }
       }
 
-      $context['sandbox']['current']++;
-      $context['finished'] = $context['sandbox']['current'] / $context['sandbox']['total'];
+      $context['sandbox']['items_processed']++;
+      $context['finished'] = $context['sandbox']['items_processed'] / $context['sandbox']['items_total'];
+
+      if ($context['finished'] == 1) {
+        // Set some results.
+      }
     }
   }
 
@@ -135,6 +145,7 @@ final class MediaSyncForm extends FormBase {
   public static function batchFinished($success, array $results, array $operations) {
     if ($success) {
       \Drupal::messenger()->addStatus(t('Media sync completed successfully.'));
+      \Drupal::messenger()->addStatus(implode("<br>", $results['messages']));
     }
     else {
       \Drupal::messenger()->addError(t('Media sync encountered an error.'));
