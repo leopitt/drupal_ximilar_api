@@ -24,8 +24,8 @@ A Drupal module for integrating with the Ximilar Image API.
 - an easy way of seeing whether similar images exist in the collection to the one that I provide
 
 ### As a content editor I want
-- a page where I can find and remove duplicate images that are in the Media Library
 - a page where I can check the library for a duplicate image in the Media Library to the one that I possess
+- a page where I can find and remove duplicate images that are in the Media Library
 - a page where I can browse the contents of the Ximilar collection
 - a page where I can create tags based on an image
 - a page where I can search my media library by text

@@ -23,6 +23,8 @@ final class XimilarAPIService {
   /**
    * The API base URL.
    *
+   * See documentation at https://docs.ximilar.com/services/photo_similarity/
+   *
    * @var string
    */
   private string $apiBaseUrl = 'https://api.ximilar.com/photo/search/v2/';
@@ -240,6 +242,8 @@ final class XimilarAPIService {
   /**
    * Search for near duplicate images in the collection.
    *
+   * See https://docs.ximilar.com/services/similarity_search/#v2nearduplicates
+   *
    * @param FileInterface $image_file
    *   The image file to search for.
    *
@@ -257,9 +261,6 @@ final class XimilarAPIService {
       $request = [
         'headers' => $this->getHttpRequestHeaders(),
         'json' => [
-          'fields_to_return' => [
-            '_id',
-          ],
           'query_record' => $this->getImageData($image_file),
         ],
       ];
@@ -293,8 +294,13 @@ final class XimilarAPIService {
         }
       }
 
+      // Sort near duplicates by distance ascending.
+      usort($near_duplicates, function ($a, $b) {
+        return $a['distance'] <=> $b['distance'];
+      });
+
       if ($this->verboseLogging) {
-        $this->logger->info(implode('; ', $near_duplicates));
+        $this->logger->info(print_r($near_duplicates, TRUE));
       }
 
     } catch (GuzzleException $e) {

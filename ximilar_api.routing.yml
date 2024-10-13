@@ -13,3 +13,11 @@ ximilar_api.media_sync:
     _form: 'Drupal\ximilar_api\Form\MediaSyncForm'
   requirements:
     _permission: 'administer ximilar api'
+
+ximilar_api.check_similarity:
+  path: '/admin/config/media/ximilar-api/check-similarity'
+  defaults:
+    _title: 'Check Similarity'
+    _form: 'Drupal\ximilar_api\Form\MediaCheckSimilarityForm'
+  requirements:
+    _permission: 'administer ximilar api'

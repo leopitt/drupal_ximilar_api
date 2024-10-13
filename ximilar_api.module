@@ -1,16 +1,47 @@
 <?php
 
-use Drupal\Core\Url;
-use Drupal\file\Entity\File;
-use Drupal\file\FileInterface;
-use Drupal\Core\Link;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Implements hook_ENTITY_delete().
+ *
+ * @param EntityInterface $entity
+ *  The Media entity.
  */
-function ximilar_api_file_delete(File $file) {
+function ximilar_api_media_delete(EntityInterface $entity) {
   // Load the ximilar_api service.
-  /** @var \Drupal\ximilar_api\XimilarAPIService $ximilar_api */
+  /** @var \Drupal\ximilar_api\Service\XimilarAPIService $ximilar_api */
   $ximilar_api = \Drupal::service('ximilar_api.service');
+  // Get the file from the media entity.
+  $file = $entity->get('field_media_image')->entity;
+  // Delete the file from the Ximilar collection.
   $ximilar_api->delete([$file]);
+}
+
+/**
+ * Implements hook_ENTITY_insert().
+ *
+ * @param EntityInterface $entity
+ *  The Media entity.
+ */
+function ximilar_api_media_insert(EntityInterface $entity) {
+  // Load the ximilar_api service.
+  /** @var \Drupal\ximilar_api\Service\XimilarAPIService $ximilar_api */
+  $ximilar_api = \Drupal::service('ximilar_api.service');
+  // Get the file from the media entity.
+  $file = $entity->get('field_media_image')->entity;
+  // Insert the file to the Ximilar collection.
+  $ximilar_api->insert([$file]);
+}
+
+/**
+ * Implements hook_entity_bundle_field_info_alter().
+ */
+function ximilar_api_entity_bundle_field_info_alter(&$fields, EntityTypeInterface $entity_type, $bundle) {
+  if ($entity_type->id() === 'media' && $bundle === 'image') {
+    // Add a custom validation constraint to the field_media_image.
+    $fields['field_media_image']->addConstraint('MediaImageSimilarity', []);
+  }
 }

@@ -17,3 +17,10 @@ ximilar_api.media_sync:
   parent: 'ximilar_api.settings'
   route_name: ximilar_api.media_sync
   weight: 2
+
+ximilar_api.check_similarity:
+  title: Check Similarity
+  description: Check similarity of an uploaded image with the images in the Ximilar Collection.
+  parent: 'ximilar_api.settings'
+  route_name: ximilar_api.check_similarity
+  weight: 3

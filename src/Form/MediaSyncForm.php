@@ -72,7 +72,7 @@ final class MediaSyncForm extends FormBase {
    */
   public static function processMediaImages(array &$context) {
     // Get the Ximilar API service.
-    /** @var \Drupal\ximilar_api\XimilarAPIService $ximilar_api */
+    /** @var \Drupal\ximilar_api\Service\XimilarAPIService $ximilar_api */
     $ximilar_api = \Drupal::service('ximilar_api.service');
 
     // If we haven't already got a total, then we need to initialise
